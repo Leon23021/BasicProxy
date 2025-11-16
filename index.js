@@ -1,53 +1,39 @@
-// Copyright (c) 2024 iiPython
+import { Hono } from 'hono';
+import { serve } from '@hono/node-server';
 
-// List of domains
-// Would of preferred to use JSON, but CF doesn't allow `require("fs")`
-const domains = [
-    "apis",
-    "assetdelivery",
-    "avatar",
-    "badges",
-    "catalog",
-    "chat",
-    "contacts",
-    "contentstore",
-    "develop",
-    "economy",
-    "economycreatorstats",
-    "followings",
-    "friends",
-    "games",
-    "groups",
-    "groupsmoderation",
-    "inventory",
-    "itemconfiguration",
-    "locale",
-    "notifications",
-    "points",
-    "presence",
-    "privatemessages",
-    "publish",
-    "search",
-    "thumbnails",
-    "trades",
-    "translations",
-    "users"
-]
+const app = new Hono();
 
-// Export our request handler
-export default {
-    async fetch(request) {
-        const url = new URL(request.url);
-        const path = url.pathname.split(/\//);
+// In-memory storage for bot status
+let botStatus = {
+  botOnline: false,
+  guilds: 0,
+  timestamp: null
+};
 
-        if (!path[1].trim()) return new Response(JSON.stringify({ message: "Missing ROBLOX subdomain." }), { status: 400 });
+// Root endpoint for UptimeRobot ping
+app.get('/', (c) => 'ok');
 
-        if (!domains.includes(path[1])) return new Response(JSON.stringify({ message: "Specified subdomain is not allowed." }), { status: 401 });
-        
-        return fetch(`https://${path[1]}.roblox.com/${path.slice(2).join("/")}${url.search}`, {
-            method: request.method,
-            headers: request.headers["content-type"] ? { "Content-Type": request.headers["content-type"] } : {},
-            body: request.body
-        });
-    }
-}
+// Endpoint to get bot status
+app.get('/bot', (c) => {
+  return c.json(botStatus);
+});
+
+// Endpoint to update bot status (Pterodactyl bot will POST here)
+app.post('/update', async (c) => {
+  try {
+    const data = await c.req.json();
+    botStatus = {
+      botOnline: data.botOnline ?? false,
+      guilds: data.guilds ?? 0,
+      timestamp: new Date().toISOString()
+    };
+    return c.json({ success: true });
+  } catch (err) {
+    return c.json({ success: false, error: err.message });
+  }
+});
+
+// Start server
+const PORT = process.env.PORT || 3000;
+serve({ fetch: app.fetch, port: PORT });
+console.log(`🌐 Status server running on port ${PORT}`);
