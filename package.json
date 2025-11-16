@@ -1,11 +1,13 @@
 {
-    "name": "basicproxy",
-    "description": "A basic Roblox proxy for use on Cloudflare Workers.",
-    "version": "1.0.0",
-    "author": "pyxfluff <business@notpyx.me> iiPython <ben@iipython.dev>",
-    "scripts": {
-        "run": "node index.js",
-        "deploy": "wrangler deploy"
-    },
-    "keywords": []
+  "name": "boba-status-server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "hono": "^3.0.0",
+    "@hono/node-server": "^3.0.0"
+  }
 }
